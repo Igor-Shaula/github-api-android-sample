@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.switchMap
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -44,8 +44,8 @@ class UsersListFragment : Fragment(), UsersListAdapter.UsersListAdapterInteracti
         itemViewer.layoutManager = LinearLayoutManager(context)
         itemViewer.adapter = usersListAdapter
 
-        Transformations.switchMap(usersListViewModel.dataSource) { dataSource -> dataSource.loadStateLiveData }
-            .observe(this, Observer {
+        usersListViewModel.dataSource.switchMap { dataSource -> dataSource.loadStateLiveData }
+            .observe(viewLifecycleOwner, Observer {
                 when(it) {
                     Status.LOADING -> {
                         usersListViewModel.isWaiting.set(true)
@@ -66,12 +66,12 @@ class UsersListFragment : Fragment(), UsersListAdapter.UsersListAdapterInteracti
                 }
             })
 
-        Transformations.switchMap(usersListViewModel.dataSource) { dataSource -> dataSource.totalCount }
-            .observe(this, Observer {totalCount ->
+        usersListViewModel.dataSource.switchMap() { dataSource -> dataSource.totalCount }
+            .observe(viewLifecycleOwner, Observer {totalCount ->
                 totalCount?.let { usersListViewModel.totalCount.set(it)}
             })
 
-        usersListViewModel.usersLiveData.observe(this, Observer {
+        usersListViewModel.usersLiveData.observe(viewLifecycleOwner, Observer {
             usersListAdapter.submitList(it)
         })
     }
